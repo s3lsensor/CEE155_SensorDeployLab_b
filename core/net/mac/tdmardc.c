@@ -59,6 +59,10 @@ volatile rtimer_clock_t radio_TX_time;
 static rtimer_clock_t BS_RX_start_time = 0;
 //static uint8_t *node_list; //allocated, initialized in init()
 
+//bkn array
+static uint8_t bkn_pkt[18] = {0};
+static uint8_t bkn_len = 18;
+
 
 //Timer -- BS
 static struct rtimer BSTimer;
@@ -161,8 +165,8 @@ static void TDMA_BS_send(void)
   bkn_pkt[14]=1;
   bkn_pkt[15]=2;
 */
-  uint8_t bkn_len = 12;
-  uint8_t bkn_pkt[12] = {72,73,72,74,72,75,72,76,72,77,72,78};
+  // uint8_t bkn_len = 12;
+  // uint8_t bkn_pkt[12] = {72,73,72,74,72,75,72,76,72,77,72,78};
 
   // set timer for next BS send
   // right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
@@ -435,6 +439,9 @@ static void input(void)
     node_list[current_TS-1] = sent_sn_id;
   }
 */
+
+  // lab 7
+  bkn_pkt[sent_sn_id] = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
 
   PRINTF("[Sensor: %u] [Slot: %u] [Seq: %u]\n",
          sent_sn_id,current_TS,packetbuf_attr(PACKETBUF_ATTR_PACKET_ID));

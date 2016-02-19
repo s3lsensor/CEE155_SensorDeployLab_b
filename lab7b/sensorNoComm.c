@@ -28,7 +28,7 @@
 #define PRINTF(...)
 #endif
 
-#define SAMPLE_RATE 5 //ticks.1024 ticks per sec
+#define SAMPLE_RATE 256 //ticks.1024 ticks per sec
 
 //global veriable
 static struct ctimer ct,reset_timer;

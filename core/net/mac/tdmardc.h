@@ -29,8 +29,8 @@
 #endif
 */
 #ifndef FRAMES_PER_SEC
-#define FRAMES_PER_SEC 6.0
-#define FRAMES_PER_SEC_INT 6
+#define FRAMES_PER_SEC 1.0
+#define FRAMES_PER_SEC_INT 1
 #endif
 
 #ifndef SEGMENT_PERIOD
@@ -38,7 +38,7 @@
 #endif
 
 #ifndef TOTAL_TS
-#define TOTAL_TS		6
+#define TOTAL_TS		16
 #endif
 
 #ifndef BKN_SLOTS

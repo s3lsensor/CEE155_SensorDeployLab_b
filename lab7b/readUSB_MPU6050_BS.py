@@ -162,7 +162,7 @@ while True & (usb_obj is not None):
 		print readTime,delta_time.seconds,total_microsecond, total_esp_time,output_header
 
 		if payload_len == 0:
-			output_str = ",".join(["0"]*6)
+			output_str = ",".join(["0"]*3)
 			fn_handle.write(str(int(total_microsecond))+','+output_header+','+output_str+'\n')
 			continue
 
@@ -178,7 +178,7 @@ while True & (usb_obj is not None):
 			output_list.append(str(s.value))
 			counter = counter + 1
 
-			if counter == 6:
+			if counter == 3:
 				output_str = ",".join(output_list)
 				#fn_handle.write(str(readTime)+','+str(int(total_microsecond))+','+output_header+','+output_str+'\n')
 				#fn_handle.write(str(int(total_microsecond))+','+output_header+','+output_str+'\n')

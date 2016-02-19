@@ -30,7 +30,7 @@
 #endif
 
 
-#define SAMPLE_RATE 32 //ticks.1024 ticks per sec & fs = 50Hz
+#define SAMPLE_RATE 256 //ticks.1024 ticks per sec & fs = 50Hz
 
 #define MY_SN_ID 10
 
@@ -49,8 +49,6 @@ static uint8_t has_reset = 0;
 static uint8_t MPU_status = 0;
 
 
-static uint8_t disable_sending = 1;
-
 /*---------------------------------------------------------------*/
 PROCESS(null_app_process, "MPU 6050 Process");
 AUTOSTART_PROCESSES(&null_app_process);
@@ -62,21 +60,15 @@ static void app_recv(void)
 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 
 #ifdef SF_MOTE_TYPE_AP
-	if(disable_sending == 0)
-		return;
 
-	//uint8_t *data = packetbuf_dataptr();
+	uint8_t *data = packetbuf_dataptr();
 
 	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
 
 	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
 	uint8_t payload_len = packetbuf_datalen();
-	uint8_t num_sample = (uint8_t)(payload_len/MPU_DATA_ACC_GYRO_SIZE);
-
-	//only print my information
-	if (rx_sn_id != MY_SN_ID)
-		return;
+	
 /*
 	If this node is base station, then print out received messages.
 
@@ -87,21 +79,42 @@ static void app_recv(void)
 	Please see readUSB_MPU6050_BS.py
 */
 
-	mpu_data_acc_gyro_union SensorData[40];
-	memcpy((uint8_t*)SensorData,packetbuf_dataptr(),num_sample*MPU_DATA_ACC_GYRO_SIZE);
-
-	uint8_t i = 0;
-
-	for(i = 0; i < num_sample; i++)
+	if(node_id == 0)
 	{
-		printf("%u,%d,%d,%d",pkt_seq,SensorData[i].data.x,SensorData[i].data.y,SensorData[i].data.z);
-		uart1_writeb('\n');
+		//start byte
+		putchar(126);
+		putchar(126);
+
+		// packet information
+
+		packet_counter = packet_counter + 1;
+		packet_counter = ((packet_counter == 10) ? 11 : packet_counter);
+
+		 putchar(rx_sn_id);
+		 putchar(packet_counter);
+		 putchar(pkt_seq);
+		 putchar(payload_len);
+
+		uint8_t i = 0;
+
+		if(print_MPU != 0)
+		{
+			for(i = 0; i < (payload_len); i++)
+			{
+				//printf("%d,",((data[2*i+1]<<8)|data[2*i]));
+				putchar(data[i]);
+			}
+		}
+
+
+
 	}
 
 
 
-//	uart1_writeb('\n');
-//	uart1_writeb('\n');
+	uart1_writeb('\n');
+	uart1_writeb('\n');
+
 #endif
 
 #ifdef SF_MOTE_TYPE_SENSOR
@@ -110,11 +123,14 @@ static void app_recv(void)
 	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
 	uint8_t payload_len = packetbuf_datalen();
+	uint8_t* payload_ptr = (uint8_t *)packetbuf_dataptr();
 
-	if(rx_sn_id == 0)
+	uint8_t i = 0;
+	for(i = 0; i<payload_len-2;i++)
 	{
-		printf("RX packet %u and %u bytes from BS\n",pkt_seq,payload_len);
+		printf("%d.",payload_ptr[i]);
 	}
+	putchar('\n');
 	
 #endif
 	
@@ -174,9 +190,6 @@ static void reset_sample_timer(void)
 PROCESS_THREAD(null_app_process, ev, data)
 {
 
-#ifdef SF_MOTE_TYPE_AP
-	disable_sending = 1;
-#endif
 
 	PROCESS_BEGIN();
 	printf("MPU6050 Started\n");
@@ -258,9 +271,10 @@ PROCESS_THREAD(null_app_process, ev, data)
 		printf("Acceleromter config: %u\n",MPU_config);
 
 		// LPF: cut-off 21Hz for accel and 20Hz for gyro; DLPF_CFG = 4
-//		read_mpu_reg(MPU_CONFIG,&MPU_config);
-//		MPU_config = MPU_config | BV(2); // set bit 2 to 1, DLPF_CFG = 4
-//		write_mpu_reg(MPU_CONFIG,MPU_config);
+		read_mpu_reg(MPU_CONFIG,&MPU_config);
+		MPU_config = MPU_config | BV(2); // set bit 2 to 1, 
+		MPU_config = MPU_config | BV(1); // set bit 1 to 1. DLPF_CFG = 6
+		write_mpu_reg(MPU_CONFIG,MPU_config);
 #if DEBUG
 		read_mpu_reg(MPU_CONFIG,&MPU_config);
 		PRINTF("MPU 6050 config: %u\n",MPU_config);
